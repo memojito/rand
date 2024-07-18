@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: igpostgres
+    environment:
+      POSTGRES_USER: ig
+      POSTGRES_PASSWORD: ig
+      POSTGRES_DB: ig
+    ports:
+      - "5432:5432"
+    volumes:
+      - database_data:/var/lib/postgresql/data
+      - ./storage/init-scripts/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
+
+  server:
+    depends_on:
+      - postgres
+    container_name: igapi-server
+    environment:
+      - "POSTGRESQL_URL=${POSTGRESQL_URL}"
+    ports:
+      - "8080:8080"
+    command:
+      -address=":8080"
+    build:
+      context: .
+    restart: unless-stopped
+
+volumes:
+  database_data:
+    driver: local
